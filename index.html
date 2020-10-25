@@ -1,0 +1,70 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>SewerCrab Web</title>
+</head>
+<link rel="stylesheet" type="text/css" href="style.css">
+<div id="upload">
+    <input type="file" name="button_upload" id="button_upload" multiple="multiple">
+    <div id="previews"></div>
+    <div id="setting_clip">
+        <input id="clip" type="checkbox" name="clip" value="clip" checked="checked">切り抜き
+    </div>
+    <div id="setting_mode">
+        <input type="radio" name="mode" value="passthrough" checked="checked">処理なし
+        <input type="radio" name="mode" value="chromakey">クロマキー
+        <!--
+        <input type="radio" name="mode" value="doublemakey">ダブマキー
+        -->
+    </div>
+    <div id="setting_chromakey">
+        <select id="color">
+            <!--<option value="auto">自動</option>-->
+            <option value="blue">青</option>
+            <option value="white">白</option>
+            <option value="black">黒</option>
+            <option value="red">赤</option>
+            <option value="yellow">黄</option>
+            <option value="green">緑</option>
+        </select>
+        色
+        <input type="text" id="color_manual" value="#00A5E9">
+        誤差
+        <input type="number" id="color_manual_range" value="50">
+    </div>
+    <!--
+    <div id="setting_doublemakey">
+        <select id="color_first">
+            <option value="auto">自動</option>
+            <option value="manual">指定</option>
+            <option value="white">白</option>
+            <option value="black">黒</option>
+            <option value="blue">青</option>
+            <option value="red">赤</option>
+            <option value="yellow">黄</option>
+            <option value="green">緑</option>
+        </select>
+        <input type="text" id="color_first_manual" value="#000000">
+        <select id="color_second">
+            <option value="auto">自動</option>
+            <option value="manual">指定</option>
+            <option value="white">白</option>
+            <option value="black">黒</option>
+            <option value="blue">青</option>
+            <option value="red">赤</option>
+            <option value="yellow">黄</option>
+            <option value="green">緑</option>
+        </select>
+        <input type="text" id="color_second_manual" value="#000000">
+    </div>
+    -->
+    <button type="button" id="bash">実行</button>
+</div>
+<div id="results">
+    バグ報告など連絡は<a href="https://peing.net/ja/mili_inch?event=0">質問箱</a>へ
+</div>
+<script type="text/javascript" src="crop.js"></script>
+
+</html>
