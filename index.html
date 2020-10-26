@@ -15,11 +15,10 @@
     <div id="setting_mode">
         <input type="radio" name="mode" value="passthrough" checked="checked">処理なし
         <input type="radio" name="mode" value="chromakey">クロマキー
-        <!--
         <input type="radio" name="mode" value="doublemakey">ダブマキー
-        -->
     </div>
     <div id="setting_chromakey">
+        色
         <select id="color">
             <!--<option value="auto">自動</option>-->
             <option value="blue">青</option>
@@ -29,16 +28,15 @@
             <option value="yellow">黄</option>
             <option value="green">緑</option>
         </select>
-        色
         <input type="text" id="color_manual" value="#00A5E9">
+        <br>
         誤差
-        <input type="number" id="color_manual_range" value="50">
+        <input type="number" id="color_manual_range" value="120">
     </div>
-    <!--
     <div id="setting_doublemakey">
+        色１
         <select id="color_first">
-            <option value="auto">自動</option>
-            <option value="manual">指定</option>
+            <!--<option value="auto">自動</option>-->
             <option value="white">白</option>
             <option value="black">黒</option>
             <option value="blue">青</option>
@@ -46,20 +44,23 @@
             <option value="yellow">黄</option>
             <option value="green">緑</option>
         </select>
-        <input type="text" id="color_first_manual" value="#000000">
+        <input type="text" id="color_first_manual" value="#EFF0EB">
+        <br>
+        色２
         <select id="color_second">
-            <option value="auto">自動</option>
-            <option value="manual">指定</option>
+            <!--<option value="auto">自動</option>-->
             <option value="white">白</option>
-            <option value="black">黒</option>
+            <option value="black" selected>黒</option>
             <option value="blue">青</option>
             <option value="red">赤</option>
             <option value="yellow">黄</option>
             <option value="green">緑</option>
         </select>
         <input type="text" id="color_second_manual" value="#000000">
+        <br>
+        マスク補正
+        <input type="number" id="mask_contrast" value="120">
     </div>
-    -->
     <button type="button" id="bash">実行</button>
 </div>
 <div id="results">

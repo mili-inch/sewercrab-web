@@ -136,6 +136,21 @@
         }
         return imageData_dst;
     }
+    //画像のアルファをマスク化
+    const getMaskFromImageAlpha = function (ctx, imageData, width, height) {
+        let x, y, i;
+        let imageData_dst = ctx.createImageData(width, height);
+        for (y = 0; y < height; y++) {
+            for (x = 0; x < width; x++) {
+                i = (x + y * width) * 4;
+                imageData_dst.data[i] = imageData.data[i + 3];
+                imageData_dst.data[i + 1] = imageData.data[i + 3];
+                imageData_dst.data[i + 2] = imageData.data[i + 3];
+                imageData_dst.data[i + 3] = 255;
+            }
+        }
+        return imageData_dst;
+    }
     //不透明領域でマスク作成
     const getOpacityMask = function (ctx, imageData, width, height) {
         let x, y, i;
@@ -356,12 +371,40 @@
         const definedColor = getColor(color, imageData, width, height, colorCode);
         const chromakeyMask = getColorSelectiveMask(ctx, imageData, width, height, definedColor, range);
         const maskInv = getInversedImageData(ctx, chromakeyMask, width, height);
-        const result = getMaskedImageData(ctx, imageData, maskInv, width, height);
+        const imageAlpha = getMaskFromImageAlpha(ctx, imageData, width, height);
+        const compoundedMask = compoundImageData(ctx, multiply, maskInv, imageAlpha, width, height);
+
+        const result = getMaskedImageData(ctx, imageData, compoundedMask, width, height);
         return result;
     }
 
-    const getDoublemakeyImageData = (ctx, imageData_first, imageData_second, color_first, color_second, width, height) => {
+    const getDoublemakeyImageData = (ctx, imageData_first, imageData_second, color_first, color_second, width, height, contrast) => {
+        const back_first = getPlaneImageData(ctx, width, height, color_first[0], color_first[1], color_first[2], 255);
+        const back_second = getPlaneImageData(ctx, width, height, color_second[0], color_second[1], color_second[2], 255);
+        const difference_card = compoundImageData(ctx, difference, imageData_first, imageData_second, width, height);
+        const difference_back = compoundImageData(ctx, difference, back_first, back_second, width, height);
+        const division_btoc = compoundImageData(ctx, division, difference_back, difference_card, width, height);
+        const alphaMaskCol = getInversedImageData(ctx, division_btoc, width, height);
+        const alphaMask = getGrayImageData(ctx, alphaMaskCol, width, height);
 
+        const firstAlpha = getMaskFromImageAlpha(ctx, imageData_first, width, height);
+        const inversedFirstAlpha = getInversedImageData(ctx, firstAlpha, width, height);
+        const expandedFirstAlpha = getExpandedMask(ctx, inversedFirstAlpha, width, height,6);
+        const useAlpha = getInversedImageData(ctx, expandedFirstAlpha, width, height);
+        const compoundedMask = compoundImageData(ctx, multiply, alphaMask, useAlpha, width, height);
+
+        const selectBlack = getColorSelectiveMask(ctx, compoundedMask, width, height, [0,0,0], contrast);
+        const selectWhite = getColorSelectiveMask(ctx, compoundedMask, width, height, [255,255,255],contrast);
+        const planeBlack = getPlaneImageData(ctx, width, height, 0,0,0,255);
+        const planeWhite = getPlaneImageData(ctx, width, height, 255,255,255,255);
+        const maskBlack = getMaskedImageData(ctx, planeBlack, selectBlack, width, height);
+        const maskWhite = getMaskedImageData(ctx, planeWhite, selectWhite, width, height);
+
+        const blackMaskedMask = compoundImageDataNormal(ctx, maskBlack, compoundedMask, width, height);
+        const resultMask = compoundImageDataNormal(ctx, maskWhite, blackMaskedMask, width, height);
+
+        const result = getMaskedImageData(ctx, imageData_first, resultMask, width, height);
+        return result;
     }
 
     //////////////////////////////////////////////////////////////////////////////
@@ -378,6 +421,9 @@
     const text_doublecolor_manual_first = document.getElementById("color_first_manual");
     const text_doublecolor_manual_second = document.getElementById("color_second_manual");
     const range_color_manual = document.getElementById("color_manual_range");
+    const setting_chromakey = document.getElementById("setting_chromakey");
+    const setting_doublemakey = document.getElementById("setting_doublemakey");
+    const mask_contrast = document.getElementById("mask_contrast");
 
     let dragSrc;
     let dragDst;
@@ -527,9 +573,11 @@
                 const imageData_second = canvases[i + 1].imageData;
                 const width = canvas.width;
                 const height = canvas.height;
-                const color_first = getColor(select_doublecolor_first.value, imageData_first, width, height);
-                const color_second = getColor(select_doublecolor_second.value, imageData_second, width, height);
-                const result_doublemakey = getDoublemakeyImageData(ctx, imageData_first, imageData_second, color_first, color_second, width, height);
+                const text_color_first = text_doublecolor_manual_first.value;
+                const text_color_second = text_doublecolor_manual_second.value;
+                const color_first = getColor(select_doublecolor_first.value, imageData_first, width, height, text_color_first);
+                const color_second = getColor(select_doublecolor_second.value, imageData_second, width, height, text_color_second);
+                const result_doublemakey = getDoublemakeyImageData(ctx, imageData_first, imageData_second, color_first, color_second, width, height, Number(mask_contrast.value));
                 ctx.putImageData(result_doublemakey, 0, 0);
                 frame_results.appendChild(canvas);
                 addDownloadLink(frame_results, canvas);
@@ -566,7 +614,7 @@
         parent.appendChild(link_download);
         parent.appendChild(button_download);
     }
-    select_color.addEventListener("change", function(e) {
+    select_color.addEventListener("change", function (e) {
         let color;
         switch (select_color.value) {
             case "auto":
@@ -592,5 +640,75 @@
                 break;
         }
         text_color_manual.value = color;
+    });
+    select_doublecolor_first.addEventListener("change", function (e) {
+        let color;
+        switch (select_doublecolor_first.value) {
+            case "auto":
+                color = "#000000";
+                break;
+            case "white":
+                color = "#EFF0EB";
+                break;
+            case "black":
+                color = "#000000";
+                break;
+            case "blue":
+                color = "#00A5E9";
+                break;
+            case "red":
+                color = "#E7256B";
+                break;
+            case "yellow":
+                color = "#F1DE18";
+                break;
+            case "green":
+                color = "#00AC92";
+                break;
+        }
+        text_doublecolor_manual_first.value = color;
+    });
+    select_doublecolor_second.addEventListener("change", function (e) {
+        let color;
+        switch (select_doublecolor_second.value) {
+            case "auto":
+                color = "#000000";
+                break;
+            case "white":
+                color = "#EFF0EB";
+                break;
+            case "black":
+                color = "#000000";
+                break;
+            case "blue":
+                color = "#00A5E9";
+                break;
+            case "red":
+                color = "#E7256B";
+                break;
+            case "yellow":
+                color = "#F1DE18";
+                break;
+            case "green":
+                color = "#00AC92";
+                break;
+        }
+        text_doublecolor_manual_second.value = color;
+    });
+    document.getElementById("setting_mode").addEventListener("change", function (e) {
+        switch (e.target.value) {
+            case "passthrough":
+                setting_chromakey.style.display = "none";
+                setting_doublemakey.style.display = "none";
+                break;
+            case "chromakey":
+                setting_chromakey.style.display = "block";
+                setting_doublemakey.style.display = "none";
+                break;
+            case "doublemakey":
+                setting_chromakey.style.display = "none";
+                setting_doublemakey.style.display = "block";
+                break;
+        }
     });
 })();

@@ -4,6 +4,12 @@
 canvas {
     max-height: 600px;
 }
+#setting_chromakey {
+    display: none;
+}
+#setting_doublemakey {
+    display: none;
+}
 @media screen and (max-width: 480px){  }
 @media screen and (min-width: 480px){  }
 @media screen and (min-width: 480px) and ( max-width:1024px) {  }
